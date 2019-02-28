@@ -1,0 +1,13 @@
+{
+  "name": "CustomScalarResolversFailToRunExample",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Stephen Handley <stephen.handley@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-server-express": "2.4.8",
+    "express": "4.16.4",
+    "graphql": "14.1.1",
+    "graphql-validated-types": "1.3.0"
+  }
+}
