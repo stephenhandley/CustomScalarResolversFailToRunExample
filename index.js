@@ -6,25 +6,38 @@ const {
   GraphQLValidatedString
 } = require('graphql-validated-types');
 
-const myCustomScalarType = new GraphQLScalarType({
-  name: 'MyCustomScalar',
+// This is a copy of the class from graphql-validated-types
+const GraphQLValidatedScalar = require('./GraphQLValidatedScalar');
+
+function ensureLessThan (threshold) {
+  return function (value) {
+    if (value >= threshold) {
+      throw new TypeError(`Number is not less than ${threshold}`);
+    }
+    return value;
+  };
+}
+
+const ensureLessThan100 = ensureLessThan(100);
+const ensureLessThan200 = ensureLessThan(200);
+
+const NumberLessThan100 = new GraphQLScalarType({
+  name: 'NumberLessThan100',
   description: 'Description of my custom scalar type',
-  serialize(value) {
+  serialize (value) {
     console.log('MCS serialize');
     return value;
   },
-  parseValue(value) {
+  parseValue (value) {
     console.log('MCS parseValue');
-    let result;
-    // Implement custom behavior here by setting the 'result' variable
-    return result;
+    return ensureLessThan100(value);
   },
-  parseLiteral(ast) {
+  parseLiteral (ast) {
     console.log('MCS parseLiteral');
-    switch (ast.kind) {
-      case Kind.Int:
-      // return a literal value, such as 1 or 'static string'
+    if (ast.kind !== Kind.Int) {
+      throw new TypeError('Not an int');
     }
+    return ensureLessThan100(value);
   }
 });
 
@@ -36,32 +49,68 @@ const Email = new GraphQLValidatedEmail({
   name: 'Email'
 }).exact();
 
+const NumberLessThan200 = new GraphQLValidatedScalar({
+  name: 'NumberLessThan200'
+}).validator((value)=> {
+  if ((typeof value !== 'number')) {
+    throw new TypeError('Not an int');
+  }
+	return ensureLessThan200(value);
+});
+
 const schemaString = gql`
-  scalar MyCustomScalar
+  scalar NumberLessThan100
+  scalar NumberLessThan200
   scalar Date
   scalar Email
 
   type Foo {
-    aField: MyCustomScalar
-    email: Email
-    date: Date
+    lessThan100: NumberLessThan100!
+    lessThan200: NumberLessThan200!
+    date: Date!
+    email: Email!
   }
 
   type Query {
     foo: Foo
   }
+
+  input FooInput {
+    lessThan100: NumberLessThan100
+    lessThan200: NumberLessThan200
+    date: Date
+    email: Email
+  }
+
+  type Mutation {
+    setFoo (input: FooInput!): Foo
+  }
 `;
 
+const FOO = {
+  lessThan100: 1000,
+  lessThan200: 20000,
+  date: '2019/03/28',
+  email: 'email@email.com'
+}
+
 const resolverFunctions = {
-  MyCustomScalar: myCustomScalarType,
+  NumberLessThan100,
+  NumberLessThan200,
+  Date,
+  Email,
   Query: {
-    foo: () => {
-      console.log('getting foo!');
-      return {
-        aField: 1,
-        email: 'joejoe.com',
-        date: '2019/03/28'
-      };
+    foo: ()=> {
+      return FOO;
+    }
+  },
+  Mutation: {
+    setFoo: function (obj, args) {
+      for (const [k, v] of Object.entries(args.input)) {
+        console.log(`setting FOO.${k}=${v}`);
+        FOO[k] = v;
+      }
+      return FOO;
     }
   }
 };
@@ -77,5 +126,5 @@ server.applyMiddleware({app, path});
 
 const PORT = 5000;
 app.listen(PORT, ()=> {
-  console.log(`🚀 Server open a localhost:${PORT}`);
+  console.log(`🚀 Server running at localhost:${PORT}`);
 });
