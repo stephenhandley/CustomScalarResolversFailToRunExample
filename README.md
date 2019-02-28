@@ -1,4 +1,4 @@
-# Example demonstrating how [graphql-validated-types](https://github.com/stephenhandley/graphql-validated-types) fails to work in versions of [graphql](https://github.com/graphql/graphql-js) from 0.13.2
+# Example demonstrating how [graphql-validated-types](https://github.com/stephenhandley/graphql-validated-types) fails to work in versions of [graphql](https://github.com/graphql/graphql-js) after 0.13.2
 
 Please see example in index.js
 
